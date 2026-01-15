@@ -11,18 +11,41 @@ Built by [Travis Eric](https://traviseric.com) as part of the Teneo ecosystem. E
 git clone https://github.com/Traviseric/teneo-agent.git
 cd teneo-agent
 
-# 2. Set your Anthropic API key (or use Claude CLI login)
+# 2. Login to Claude CLI
 claude login
-# OR
-export ANTHROPIC_API_KEY=your_key_here
 
-# 3. Create your task file
-cp TASKS.md.example TASKS.md
-# Edit TASKS.md with your tasks
-
-# 4. Run the agent
-python teneo_agent.py start --project /path/to/your/project --continuous
+# 3. Choose your runner:
 ```
+
+### Option A: Relay Runner (Task-based)
+```bash
+# Create task file
+cp TASKS.md.example TASKS.md
+# Edit with your tasks
+
+# Run
+python teneo_agent.py start --project /path/to/project --continuous
+```
+
+### Option B: Ralph Runner (Geoff Huntley's pattern)
+```bash
+# Create PROMPT.md in your project with intent + tasks
+# Then run
+python ralph_runner.py --project /path/to/project --max 10
+```
+
+## Two Runners, Two Patterns
+
+| Runner | Pattern | Best For |
+|--------|---------|----------|
+| `teneo_agent.py` | Task relay | Checkbox tasks, parallel workers |
+| `ralph_runner.py` | Ralph Loop | Fresh context, PROMPT.md driven |
+
+**Relay Runner** (my pattern): Workers claim tasks from TASKS.md, execute, mark complete. Good for parallel work.
+
+**Ralph Runner** ([Geoff Huntley's pattern](https://github.com/ghuntley/how-to-ralph-wiggum)): Each iteration reads PROMPT.md with fresh context. No memory accumulation. `while :; do cat PROMPT.md | agent; done`
+
+Try both, see what works for your workflow. Feedback welcome!
 
 ## How It Works
 
