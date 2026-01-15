@@ -1,0 +1,25 @@
+# Agent runs (temporary worker output)
+agent_runs/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local task file (users create their own)
+# TASKS.md  # Uncomment if you don't want to track your tasks
