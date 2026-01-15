@@ -164,11 +164,17 @@ ANTHROPIC_API_KEY=your_key_here
 
 - **[GETTING_STARTED.md](GETTING_STARTED.md)** - Project setup, CLAUDE.md template, first run
 - **[BEST_PRACTICES.md](BEST_PRACTICES.md)** - 10 principles for better results
+- **[docs/MCP_OPTIMIZATION.md](docs/MCP_OPTIMIZATION.md)** - Optimize MCP servers for agents
 - **[TASKS.md.example](TASKS.md.example)** - Task file template
 
 ## Learn More
 
-- **Free Course**: [AI-First Fundamentals](https://traviseric.com/courses/ai-first-fundamentals)
+**Free Resources:**
+- [AI-First Fundamentals](https://traviseric.com/courses/ai-first-fundamentals) - Free course, 37 lessons on engineering principles
+
+**Go Deeper:**
+- [Complete AI Development System](https://traviseric.com/products/ai-development-system) - 32 guides to enhance your agent ($197)
+- [AI Orchestra Method](https://traviseric.com/courses/ai-orchestra-method) - Scale to 18+ instances ($97)
 
 ## License
 
