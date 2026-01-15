@@ -195,6 +195,14 @@ Before running overnight:
 
 ## Learn More
 
-- **Free Course**: [AI-First Fundamentals](https://traviseric.com/courses/ai-first-fundamentals)
-- **Getting Started**: [GETTING_STARTED.md](GETTING_STARTED.md)
-- **Community**: [GitHub Issues](https://github.com/Traviseric/teneo-agent/issues)
+**Free Resources:**
+- [AI-First Fundamentals](https://traviseric.com/courses/ai-first-fundamentals) - 37 lessons on engineering principles
+- [GETTING_STARTED.md](GETTING_STARTED.md) - Project setup guide
+- [MCP Optimization](docs/MCP_OPTIMIZATION.md) - Optimize your MCP servers
+
+**Go Deeper:**
+- [Complete AI Development System](https://traviseric.com/products/ai-development-system) - 32 advanced guides ($197)
+- [AI Orchestra Method](https://traviseric.com/courses/ai-orchestra-method) - Scale to 18+ instances ($97)
+
+**Community:**
+- [GitHub Issues](https://github.com/Traviseric/teneo-agent/issues)
