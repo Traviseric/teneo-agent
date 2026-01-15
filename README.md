@@ -160,11 +160,15 @@ ANTHROPIC_API_KEY=your_key_here
 
 5. **Run during low-stakes time** - overnight, when you can review in the morning
 
+## Documentation
+
+- **[GETTING_STARTED.md](GETTING_STARTED.md)** - Project setup, CLAUDE.md template, first run
+- **[BEST_PRACTICES.md](BEST_PRACTICES.md)** - 10 principles for better results
+- **[TASKS.md.example](TASKS.md.example)** - Task file template
+
 ## Learn More
 
 - **Free Course**: [AI-First Fundamentals](https://traviseric.com/courses/ai-first-fundamentals)
-- **Geoffrey Huntley**: [Your First Agent](https://www.yourfirstagent.com/)
-- **Steve Yegge**: [Beads](https://github.com/steveyegge/beads)
 
 ## License
 
