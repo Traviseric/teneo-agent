@@ -160,8 +160,33 @@ ANTHROPIC_API_KEY=your_key_here
 
 5. **Run during low-stakes time** - overnight, when you can review in the morning
 
+## Audit Your Project
+
+Before running overnight agents, optimize your project structure:
+
+```bash
+# 1. Clone teneo-agent
+git clone https://github.com/Traviseric/teneo-agent.git
+
+# 2. Open Claude Code in YOUR project
+cd /path/to/your/project
+claude
+
+# 3. Run the audit (paste this prompt)
+```
+
+```
+Read the best practices at [path-to-teneo-agent]/BEST_PRACTICES.md
+Then audit THIS project against those practices and give me a scorecard.
+```
+
+Claude will analyze your CLAUDE.md, project structure, documentation, and testing setup - then give you specific recommendations.
+
+**Full guide:** [docs/AUDIT_YOUR_PROJECT.md](docs/AUDIT_YOUR_PROJECT.md)
+
 ## Documentation
 
+- **[docs/AUDIT_YOUR_PROJECT.md](docs/AUDIT_YOUR_PROJECT.md)** - Audit your project for agent optimization
 - **[GETTING_STARTED.md](GETTING_STARTED.md)** - Project setup, CLAUDE.md template, first run
 - **[BEST_PRACTICES.md](BEST_PRACTICES.md)** - 10 principles for better results
 - **[docs/MCP_OPTIMIZATION.md](docs/MCP_OPTIMIZATION.md)** - Optimize MCP servers for agents
