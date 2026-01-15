@@ -218,14 +218,29 @@ Claude will analyze your CLAUDE.md, project structure, documentation, and testin
 | [Getting Started](GETTING_STARTED.md) | First-time setup, CLAUDE.md template |
 | [Task Template](TASKS.md.example) | Example task file format |
 
+## Community
+
+**Join 100+ builders running AI agents overnight:**
+
+### [AI Builders Lab on Skool](https://www.skool.com/ai-builders-lab-6883) (Free)
+
+- Share your overnight run results
+- Get feedback on your TASKS.md
+- Learn from others' workflows
+- Weekly tips and patterns
+- Direct access to Travis
+
+---
+
 ## Learn More
 
 **Free Resources:**
+- [AI Builders Lab](https://www.skool.com/ai-builders-lab-6883) - Free community for overnight agent builders
 - [AI-First Fundamentals](https://traviseric.com/courses/ai-first-fundamentals) - Free course, 37 lessons on engineering principles
 
 **Go Deeper:**
-- [Complete AI Development System](https://traviseric.com/products/ai-development-system) - 32 guides to enhance your agent ($197)
-- [AI Orchestra Method](https://traviseric.com/courses/ai-orchestra-method) - Scale to 18+ instances ($97)
+- [Complete AI Development System](https://traviseric.com/products/ai-development-system) - Full 27 principles + enhanced agent + all guides ($197)
+- [AI Orchestra Method](https://traviseric.com/courses/ai-orchestra-method) - Scale to 18+ parallel instances ($97)
 
 ## License
 
@@ -237,4 +252,6 @@ MIT License - see [LICENSE](LICENSE)
 
 ---
 
-*An independent implementation enhanced by insights from the AI-first development community.*
+*Built by Travis Eric. Enhanced with insights from the AI-first development community.*
+
+**[Join the community](https://www.skool.com/ai-builders-lab-6883)** - Share your overnight runs, learn from others.

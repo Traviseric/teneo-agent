@@ -207,13 +207,14 @@ Before running overnight:
 ## Learn More
 
 **Free Resources:**
+- [AI Builders Lab](https://www.skool.com/ai-builders-lab-6883) - Free community for overnight agent builders
 - [AI-First Fundamentals](https://traviseric.com/courses/ai-first-fundamentals) - 37 lessons on engineering principles
 - [GETTING_STARTED.md](GETTING_STARTED.md) - Project setup guide
 - [MCP Optimization](docs/MCP_OPTIMIZATION.md) - Optimize your MCP servers
 
 **Go Deeper:**
-- [Complete AI Development System](https://traviseric.com/products/ai-development-system) - 32 advanced guides ($197)
+- [Complete AI Development System](https://traviseric.com/products/ai-development-system) - Full 27 rules + enhanced agent ($197)
 - [AI Orchestra Method](https://traviseric.com/courses/ai-orchestra-method) - Scale to 18+ instances ($97)
 
 **Community:**
-- [GitHub Issues](https://github.com/Traviseric/teneo-agent/issues)
+- [AI Builders Lab on Skool](https://www.skool.com/ai-builders-lab-6883) - Share runs, get feedback, learn patterns
