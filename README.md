@@ -186,11 +186,14 @@ Claude will analyze your CLAUDE.md, project structure, documentation, and testin
 
 ## Documentation
 
-- **[docs/AUDIT_YOUR_PROJECT.md](docs/AUDIT_YOUR_PROJECT.md)** - Audit your project for agent optimization
-- **[GETTING_STARTED.md](GETTING_STARTED.md)** - Project setup, CLAUDE.md template, first run
-- **[BEST_PRACTICES.md](BEST_PRACTICES.md)** - 10 principles for better results
-- **[docs/MCP_OPTIMIZATION.md](docs/MCP_OPTIMIZATION.md)** - Optimize MCP servers for agents
-- **[TASKS.md.example](TASKS.md.example)** - Task file template
+| Guide | What You'll Learn |
+|-------|-------------------|
+| [Audit Your Project](docs/AUDIT_YOUR_PROJECT.md) | Run Claude to score and improve your project |
+| [Best Practices](BEST_PRACTICES.md) | 10 principles for agent success |
+| [Doc Organization](docs/DOC_ORGANIZATION.md) | Structure docs so agents navigate efficiently |
+| [MCP Optimization](docs/MCP_OPTIMIZATION.md) | Fix MCP token bloat |
+| [Getting Started](GETTING_STARTED.md) | First-time setup, CLAUDE.md template |
+| [Task Template](TASKS.md.example) | Example task file format |
 
 ## Learn More
 

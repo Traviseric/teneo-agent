@@ -4,6 +4,17 @@ Principles that make AI agents work better on your projects.
 
 ---
 
+## 📚 Related Guides
+
+| Guide | Topics Covered |
+|-------|----------------|
+| [MCP Optimization](docs/MCP_OPTIMIZATION.md) | CLI vs MCP, token costs, config switching |
+| [Doc Organization](docs/DOC_ORGANIZATION.md) | Clean root, docs/ structure, naming conventions |
+| [Audit Your Project](docs/AUDIT_YOUR_PROJECT.md) | Run Claude audit, scorecard, recommendations |
+| [Getting Started](GETTING_STARTED.md) | First-time setup, CLAUDE.md template |
+
+---
+
 ## CLAUDE.md Setup
 
 Every project needs a `CLAUDE.md` file in the root. This is the agent's instruction manual.
