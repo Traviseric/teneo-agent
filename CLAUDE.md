@@ -6,7 +6,8 @@ Open source overnight AI agent runner. Part of the Teneo ecosystem.
 
 | Concept | Files | Search Terms |
 |---------|-------|--------------|
-| Runner | teneo_agent.py | spawn, worker, continuous |
+| Relay Runner | teneo_agent.py | spawn, worker, continuous, relay |
+| Ralph Runner | ralph_runner.py | ralph, fresh context, PROMPT.md |
 | Task Parsing | teneo_agent.py:65-116 | parse_tasks, checkbox, incomplete |
 | Git Operations | teneo_agent.py:119-175 | checkpoint, commit, push |
 | Worker Prompts | teneo_agent.py:182-271 | create_worker_prompt, WORKER.md |
