@@ -1,0 +1,41 @@
+# Project Tasks
+
+This is an example task file. Copy it to `TASKS.md` and customize for your project.
+
+## How to Write Good Tasks
+
+- **Be specific**: "Add login form with email/password fields" not "do login"
+- **One task, one outcome**: Break big features into smaller tasks
+- **Include success criteria**: "Add tests that pass" or "Build must succeed"
+- **Order by dependency**: Setup tasks before feature tasks
+
+---
+
+## Phase 1: Project Setup
+- [ ] Initialize the project structure
+- [ ] Set up configuration files
+- [ ] Create basic folder organization
+
+## Phase 2: Core Features
+- [ ] Implement the main user interface
+- [ ] Add data persistence layer
+- [ ] Create API endpoints
+
+## Phase 3: Quality
+- [ ] Add error handling to all functions
+- [ ] Write unit tests for core logic
+- [ ] Fix any TypeScript/build errors
+
+## Phase 4: Polish
+- [ ] Add loading states to buttons
+- [ ] Improve error messages for users
+- [ ] Update documentation
+
+---
+
+## Tips
+
+1. Workers execute tasks top-to-bottom
+2. Mark tasks `[x]` when complete (workers do this automatically)
+3. Add new tasks anytime - workers pick them up next round
+4. Use clear, imperative language ("Add X", "Fix Y", "Create Z")
