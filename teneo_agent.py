@@ -450,6 +450,261 @@ def wait_for_workers(num_lanes: int, round_num: int, timeout: int = 3600) -> boo
 
 
 # =============================================================================
+# RUN ANALYZER & STATS
+# =============================================================================
+
+# Crowdsource stats endpoint (opt-in)
+STATS_ENDPOINT = "https://api.traviseric.com/teneo-stats"
+
+
+def analyze_run(project_path: Path, rounds_completed: int, start_time: datetime) -> dict:
+    """
+    Analyze the completed run and generate metrics.
+
+    Returns dict with:
+        - metrics: aggregate statistics
+        - patterns: detected issues
+        - report_path: path to generated report
+    """
+    results = {
+        "project": project_path.name,
+        "timestamp": datetime.now().isoformat(),
+        "duration_minutes": (datetime.now() - start_time).total_seconds() / 60,
+        "rounds_completed": rounds_completed,
+        "metrics": {},
+        "patterns": [],
+        "improvements": [],
+    }
+
+    # Collect worker results
+    workers = []
+    for worker_dir in sorted(AGENT_DIR.glob("round_*_lane_*")):
+        worker_info = _analyze_worker(worker_dir)
+        if worker_info:
+            workers.append(worker_info)
+
+    # Calculate metrics
+    total_workers = len(workers)
+    completed = sum(1 for w in workers if w["status"] == "complete")
+    failed = sum(1 for w in workers if w["status"] == "failed")
+    timeout = sum(1 for w in workers if w["status"] == "timeout")
+
+    results["metrics"] = {
+        "total_workers": total_workers,
+        "completed": completed,
+        "failed": failed,
+        "timeout": timeout,
+        "success_rate": (completed / total_workers * 100) if total_workers > 0 else 0,
+        "duration_minutes": results["duration_minutes"],
+    }
+
+    # Count tasks
+    tasks_file = project_path / "TASKS.md"
+    if tasks_file.exists():
+        content = tasks_file.read_text(encoding='utf-8')
+        results["metrics"]["tasks_completed"] = content.count("- [x]") + content.count("- [X]")
+        results["metrics"]["tasks_pending"] = content.count("- [ ]")
+
+    # Detect patterns
+    results["patterns"] = _detect_patterns(workers, results["metrics"])
+
+    # Generate improvements
+    results["improvements"] = _generate_improvements(results["patterns"])
+
+    return results
+
+
+def _analyze_worker(worker_dir: Path) -> dict:
+    """Analyze a single worker directory."""
+    handoff = worker_dir / "HANDOFF.md"
+    log_file = worker_dir / "LOG.md"
+    worker_file = worker_dir / "WORKER.md"
+
+    # Determine status
+    if handoff.exists() and handoff.stat().st_size > 50:
+        status = "complete"
+    elif log_file.exists():
+        log_content = log_file.read_text(encoding='utf-8', errors='replace').lower()
+        if "error" in log_content or "failed" in log_content:
+            status = "failed"
+        else:
+            status = "timeout"
+    else:
+        status = "timeout"
+
+    # Extract task
+    task = "Unknown"
+    if worker_file.exists():
+        content = worker_file.read_text(encoding='utf-8', errors='replace')
+        for line in content.split('\n'):
+            if line.strip().startswith('- [ ]') or line.strip().startswith('- [x]'):
+                task = line.strip()
+                break
+            if 'task:' in line.lower():
+                task = line.split(':', 1)[-1].strip()
+                break
+
+    return {
+        "dir": worker_dir.name,
+        "status": status,
+        "task": task[:100],
+    }
+
+
+def _detect_patterns(workers: list, metrics: dict) -> list:
+    """Detect patterns indicating issues."""
+    patterns = []
+
+    # High failure rate
+    if metrics["total_workers"] > 0:
+        failure_rate = (metrics["failed"] + metrics["timeout"]) / metrics["total_workers"]
+        if failure_rate > 0.3:
+            patterns.append({
+                "type": "high_failure_rate",
+                "severity": "high",
+                "description": f"High failure rate: {failure_rate * 100:.0f}%",
+                "recommendation": "Check worker logs for common errors. Tasks may be too complex.",
+            })
+
+    # No tasks completed
+    if metrics.get("tasks_completed", 0) == 0 and metrics["completed"] > 0:
+        patterns.append({
+            "type": "tasks_not_marked",
+            "severity": "medium",
+            "description": "Workers completed but no tasks marked done",
+            "recommendation": "Workers may not be updating TASKS.md. Check prompts.",
+        })
+
+    # Very fast completions (< 30 seconds average)
+    if metrics["completed"] > 2 and metrics["duration_minutes"] < 2:
+        patterns.append({
+            "type": "shallow_work",
+            "severity": "medium",
+            "description": "Workers completing very quickly - may indicate shallow fixes",
+            "recommendation": "Average time per task is very low. Workers may not be thorough.",
+        })
+
+    return patterns
+
+
+def _generate_improvements(patterns: list) -> list:
+    """Generate improvement suggestions from patterns."""
+    improvements = []
+    for p in patterns:
+        improvements.append({
+            "priority": "P0" if p["severity"] == "high" else "P1",
+            "title": p["description"],
+            "action": p["recommendation"],
+        })
+    return improvements
+
+
+def write_run_report(project_path: Path, analysis: dict) -> Path:
+    """Write RUN_REPORT.md to the project."""
+    report_path = project_path / "RUN_REPORT.md"
+
+    content = f"""# Teneo Agent Run Report
+
+**Project:** {analysis['project']}
+**Date:** {datetime.now().strftime('%Y-%m-%d %H:%M')}
+**Duration:** {analysis['duration_minutes']:.1f} minutes
+**Rounds:** {analysis['rounds_completed']}
+
+## Metrics
+
+| Metric | Value |
+|--------|-------|
+| Total Workers | {analysis['metrics']['total_workers']} |
+| Completed | {analysis['metrics']['completed']} |
+| Failed | {analysis['metrics']['failed']} |
+| Timeout | {analysis['metrics']['timeout']} |
+| Success Rate | {analysis['metrics']['success_rate']:.1f}% |
+| Tasks Completed | {analysis['metrics'].get('tasks_completed', 'N/A')} |
+| Tasks Pending | {analysis['metrics'].get('tasks_pending', 'N/A')} |
+
+## Patterns Detected
+
+"""
+    if analysis['patterns']:
+        for p in analysis['patterns']:
+            content += f"### [{p['severity'].upper()}] {p['description']}\n\n"
+            content += f"**Recommendation:** {p['recommendation']}\n\n"
+    else:
+        content += "*No significant patterns detected. Run looks healthy!*\n\n"
+
+    content += """## Improvements
+
+"""
+    if analysis['improvements']:
+        for imp in analysis['improvements']:
+            content += f"- **[{imp['priority']}]** {imp['title']}: {imp['action']}\n"
+    else:
+        content += "*No improvements needed.*\n"
+
+    content += f"""
+---
+
+*Generated by [Teneo Agent](https://github.com/Traviseric/teneo-agent)*
+
+**Want to improve overnight agents for everyone?**
+Run with `--share-stats` to anonymously contribute your run metrics.
+"""
+
+    report_path.write_text(content, encoding='utf-8')
+    return report_path
+
+
+def send_anonymous_stats(analysis: dict, model: str = "sonnet") -> bool:
+    """
+    Send anonymous stats to help improve Teneo Agent for everyone.
+
+    Only sends:
+    - Success rate, task counts, duration
+    - Detected patterns (no code/content)
+    - Model used, lanes
+
+    Does NOT send:
+    - Project name or path
+    - Task descriptions
+    - Any code or file contents
+    """
+    try:
+        import urllib.request
+        import json
+
+        # Anonymize - only send aggregate metrics
+        payload = {
+            "version": "1.0.0",
+            "model": model,
+            "metrics": {
+                "success_rate": analysis["metrics"]["success_rate"],
+                "tasks_completed": analysis["metrics"].get("tasks_completed", 0),
+                "tasks_pending": analysis["metrics"].get("tasks_pending", 0),
+                "duration_minutes": analysis["duration_minutes"],
+                "rounds": analysis["rounds_completed"],
+                "workers": analysis["metrics"]["total_workers"],
+            },
+            "patterns": [p["type"] for p in analysis["patterns"]],  # Just pattern types, no details
+            "timestamp": datetime.now().isoformat(),
+        }
+
+        data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(
+            STATS_ENDPOINT,
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.status == 200
+
+    except Exception:
+        # Silently fail - stats are optional
+        return False
+
+
+# =============================================================================
 # MAIN LOOP
 # =============================================================================
 
@@ -463,10 +718,16 @@ def run_continuous(
     project_path: Path,
     num_lanes: int = 1,
     max_rounds: int = 50,
-    round_delay: int = 30
+    round_delay: int = 30,
+    share_stats: bool = False
 ):
     """
     Main continuous loop - the heart of Teneo Agent.
+
+    Three phases:
+    - Phase 1: Validate project (setup if needed)
+    - Phase 2: Execute tasks
+    - Phase 3: Analyze run and generate report
 
     This implements Huntley's Ralph Loop:
     1. Fresh context per task (each worker is independent)
@@ -477,11 +738,16 @@ def run_continuous(
     - Always push to remote
     - Clear handoffs between workers
     """
+    start_time = datetime.now()
+    rounds_completed = 0
+    model = os.environ.get("TENEO_MODEL", "sonnet")
+
     log("=" * 60)
     log("TENEO AGENT - Overnight Runner")
     log(f"Project: {project_path}")
     log(f"Lanes: {num_lanes}")
     log(f"Max rounds: {max_rounds}")
+    log(f"Model: {model}")
     log("=" * 60)
 
     # ===========================================
@@ -548,6 +814,7 @@ def run_continuous(
             log("No incomplete tasks found. Run complete!")
             break
 
+        rounds_completed = round_num
         log(f"Found {len(tasks)} incomplete tasks")
 
         # Spawn workers (one per lane, up to available tasks)
@@ -578,6 +845,37 @@ def run_continuous(
     # Final checkpoint
     log("Final git checkpoint...")
     git_checkpoint(project_path, "teneo-agent: run complete")
+
+    # ===========================================
+    # PHASE 3: ANALYZE & REPORT
+    # ===========================================
+    log("\n[PHASE 3] Analyzing run...")
+
+    analysis = analyze_run(project_path, rounds_completed, start_time)
+    report_path = write_run_report(project_path, analysis)
+
+    log(f"\nRun Summary:")
+    log(f"  Duration: {analysis['duration_minutes']:.1f} minutes")
+    log(f"  Rounds: {rounds_completed}")
+    log(f"  Workers: {analysis['metrics']['total_workers']}")
+    log(f"  Success Rate: {analysis['metrics']['success_rate']:.1f}%")
+    log(f"  Tasks Completed: {analysis['metrics'].get('tasks_completed', 'N/A')}")
+    log(f"  Tasks Pending: {analysis['metrics'].get('tasks_pending', 'N/A')}")
+
+    if analysis['patterns']:
+        log(f"\nPatterns Detected: {len(analysis['patterns'])}")
+        for p in analysis['patterns']:
+            log(f"  [{p['severity'].upper()}] {p['description']}")
+
+    log(f"\nReport: {report_path}")
+
+    # Opt-in stats sharing
+    if share_stats:
+        log("\nSharing anonymous stats to help improve Teneo Agent...")
+        if send_anonymous_stats(analysis, model):
+            log("Stats shared successfully. Thank you for contributing!")
+        else:
+            log("Stats sharing failed (no worries, run completed successfully)")
 
     log("\n" + "=" * 60)
     log("TENEO AGENT RUN COMPLETE")
@@ -656,6 +954,11 @@ def main():
         default=50,
         help="Maximum rounds to run (default: 50)"
     )
+    start_parser.add_argument(
+        "--share-stats",
+        action="store_true",
+        help="Share anonymous run stats to help improve Teneo Agent (opt-in)"
+    )
 
     # Status command
     status_parser = subparsers.add_parser("status", help="Show current status")
@@ -680,7 +983,8 @@ def main():
         run_continuous(
             project_path=project_path,
             num_lanes=args.lanes,
-            max_rounds=max_rounds
+            max_rounds=max_rounds,
+            share_stats=args.share_stats
         )
 
     elif args.command == "status":
