@@ -34,14 +34,11 @@ from typing import List, Optional, Tuple
 # CONFIGURATION
 # =============================================================================
 
-# Project root (where this script lives)
-PROJECT_ROOT = Path(__file__).parent
+# Script directory (where teneo_agent.py lives)
+SCRIPT_DIR = Path(__file__).parent
 
-# Task file - workers read from here
-TASKS_FILE = PROJECT_ROOT / "TASKS.md"
-
-# Working directory for agent output
-AGENT_DIR = PROJECT_ROOT / "agent_runs"
+# Working directory for agent output (in script dir)
+AGENT_DIR = SCRIPT_DIR / "agent_runs"
 
 # Find Claude CLI
 def find_claude_cmd() -> str:
@@ -82,9 +79,10 @@ def validate_project(project_path: Path) -> dict:
     tasks_file = project_path / "TASKS.md"
     has_tasks = False
     if tasks_file.exists():
-        tasks = parse_tasks(tasks_file)
-        incomplete = [t for t in tasks if not t['completed']]
-        has_tasks = len(incomplete) > 0
+        content = tasks_file.read_text(encoding='utf-8')
+        # Count incomplete checkboxes directly to avoid circular dependency
+        incomplete_count = content.count("- [ ]")
+        has_tasks = incomplete_count > 0
         if not has_tasks:
             issues.append("No incomplete tasks in TASKS.md")
     else:
@@ -274,7 +272,7 @@ def create_worker_prompt(
 ## Assignment
 **Project:** {project_path.name}
 **Working Directory:** `{project_path}`
-**Task File:** `{TASKS_FILE}`
+**Task File:** `{project_path / "TASKS.md"}`
 **Started:** {timestamp}
 
 ## Your Task
@@ -372,10 +370,13 @@ def spawn_worker(
     # Build Claude command
     # --dangerously-skip-permissions allows autonomous operation
     # -p reads from stdin (the worker prompt)
+    # --model can be set via TENEO_MODEL env var (default: sonnet)
+    model = os.environ.get("TENEO_MODEL", "sonnet")
     claude_args = [
         CLAUDE_CMD,
         "-p",
         "--dangerously-skip-permissions",
+        "--model", model,
     ]
 
     # Platform-specific terminal spawning
@@ -539,8 +540,9 @@ def run_continuous(
         log(f"ROUND {round_num}")
         log(f"{'='*40}")
 
-        # Get incomplete tasks
-        tasks = get_incomplete_tasks(TASKS_FILE)
+        # Get incomplete tasks from project's TASKS.md
+        tasks_file = project_path / "TASKS.md"
+        tasks = get_incomplete_tasks(tasks_file)
 
         if not tasks:
             log("No incomplete tasks found. Run complete!")
@@ -582,14 +584,21 @@ def run_continuous(
     log("=" * 60)
 
 
-def show_status():
+def show_status(project_path: Path = None):
     """Show current status of tasks and recent runs."""
     log("TENEO AGENT STATUS")
     log("=" * 40)
 
+    if project_path is None:
+        project_path = Path.cwd()
+
+    tasks_file = project_path / "TASKS.md"
+
+    log(f"Project: {project_path}")
+
     # Task status
-    if TASKS_FILE.exists():
-        tasks = parse_tasks(TASKS_FILE)
+    if tasks_file.exists():
+        tasks = parse_tasks(tasks_file)
         completed = sum(1 for t in tasks if t['completed'])
         log(f"Tasks: {completed}/{len(tasks)} complete")
 
@@ -599,7 +608,7 @@ def show_status():
             for t in incomplete[:5]:
                 log(f"  - {t['task'][:60]}")
     else:
-        log(f"No task file found at {TASKS_FILE}")
+        log(f"No task file found at {tasks_file}")
         log("Create TASKS.md with checkbox format:")
         log("  - [ ] Your first task")
         log("  - [ ] Your second task")
@@ -649,7 +658,13 @@ def main():
     )
 
     # Status command
-    subparsers.add_parser("status", help="Show current status")
+    status_parser = subparsers.add_parser("status", help="Show current status")
+    status_parser.add_argument(
+        "--project", "-p",
+        type=str,
+        default=".",
+        help="Path to project (default: current directory)"
+    )
 
     args = parser.parse_args()
 
@@ -669,7 +684,8 @@ def main():
         )
 
     elif args.command == "status":
-        show_status()
+        project_path = Path(args.project).resolve()
+        show_status(project_path)
 
     else:
         parser.print_help()
