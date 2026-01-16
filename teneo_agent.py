@@ -59,6 +59,78 @@ def find_claude_cmd() -> str:
 CLAUDE_CMD = find_claude_cmd()
 
 # =============================================================================
+# PROJECT VALIDATION & SETUP
+# =============================================================================
+
+def validate_project(project_path: Path) -> dict:
+    """
+    Check if project is ready for overnight agents.
+
+    Returns dict with:
+        - ready: bool
+        - issues: list of problems found
+        - has_claude_md: bool
+        - has_tasks: bool
+    """
+    issues = []
+
+    claude_md = project_path / "CLAUDE.md"
+    has_claude_md = claude_md.exists()
+    if not has_claude_md:
+        issues.append("No CLAUDE.md found - agents need project context")
+
+    tasks_file = project_path / "TASKS.md"
+    has_tasks = False
+    if tasks_file.exists():
+        tasks = parse_tasks(tasks_file)
+        incomplete = [t for t in tasks if not t['completed']]
+        has_tasks = len(incomplete) > 0
+        if not has_tasks:
+            issues.append("No incomplete tasks in TASKS.md")
+    else:
+        issues.append("No TASKS.md found - agents need tasks to execute")
+
+    return {
+        "ready": len(issues) == 0,
+        "issues": issues,
+        "has_claude_md": has_claude_md,
+        "has_tasks": has_tasks,
+    }
+
+
+def create_setup_task(project_path: Path) -> str:
+    """
+    Create a setup task for projects that aren't ready.
+
+    This task tells the first worker to set up the project
+    for overnight agent runs.
+    """
+    return f"""Set up this project for overnight AI agents.
+
+**Your job:**
+1. Explore the project structure at `{project_path}`
+2. Create a `CLAUDE.md` file with:
+   - Project description (1-2 sentences)
+   - Lookup table mapping concepts to files
+   - Build/test commands
+   - Current focus
+   - Keep it under 60 lines
+3. Create a `TASKS.md` file with 5-10 specific tasks based on what you find:
+   - Look for TODOs, FIXMEs in code
+   - Check for missing tests
+   - Look for incomplete features
+   - Use checkbox format: `- [ ] Task description`
+4. If root directory is cluttered (>20 files), suggest which files to move to docs/
+
+**Quality check:**
+- CLAUDE.md exists and has lookup table
+- TASKS.md has at least 3 actionable tasks
+- Tasks are specific (not vague like "improve code")
+
+When done, write HANDOFF.md explaining what you set up."""
+
+
+# =============================================================================
 # TASK PARSING
 # =============================================================================
 
@@ -410,6 +482,50 @@ def run_continuous(
     log(f"Lanes: {num_lanes}")
     log(f"Max rounds: {max_rounds}")
     log("=" * 60)
+
+    # ===========================================
+    # PHASE 1: VALIDATE PROJECT
+    # ===========================================
+    log("\n[PHASE 1] Validating project...")
+    validation = validate_project(project_path)
+
+    if not validation["ready"]:
+        log("Project needs setup:")
+        for issue in validation["issues"]:
+            log(f"  - {issue}")
+
+        log("\n[SETUP] Running setup worker to prepare project...")
+
+        # Create agent directory
+        AGENT_DIR.mkdir(exist_ok=True)
+
+        # Spawn setup worker
+        setup_task = create_setup_task(project_path)
+        spawn_worker(
+            project_path=project_path,
+            round_num=0,  # Round 0 = setup
+            lane_num=1,
+            task=setup_task
+        )
+
+        # Wait for setup to complete
+        log("Waiting for setup worker to finish...")
+        wait_for_workers(1, 0, timeout=1800)  # 30 min timeout for setup
+
+        # Re-validate
+        validation = validate_project(project_path)
+        if not validation["ready"]:
+            log("\n[WARN] Setup may not be complete. Check the HANDOFF.md")
+            log("You may need to run again or manually create TASKS.md")
+            return
+
+        log("\n[SETUP COMPLETE] Project is ready for overnight run!")
+        log("=" * 60)
+
+    # ===========================================
+    # PHASE 2: EXECUTE TASKS
+    # ===========================================
+    log("\n[PHASE 2] Starting task execution...")
 
     # Pre-run git checkpoint
     log("Creating pre-run git checkpoint...")
