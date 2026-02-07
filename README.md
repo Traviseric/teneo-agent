@@ -4,6 +4,8 @@ Run Claude agents overnight to build your projects autonomously.
 
 Built by [Travis Eric](https://traviseric.com) as part of the Teneo ecosystem. Enhanced with insights from the AI-first development community including [Geoffrey Huntley](https://www.yourfirstagent.com/) and [Steve Yegge](https://github.com/steveyegge/beads).
 
+> **This is the open-source foundation.** My production system runs 40+ specialized agent types with intelligent routing, multi-account failover, production readiness pipelines, and browser QA — across a full project portfolio. Learn more at [traviseric.com](https://traviseric.com).
+
 ## Quick Start
 
 ```bash
