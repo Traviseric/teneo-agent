@@ -62,6 +62,42 @@ Building user dashboard - see specs/dashboard.md
 
 ---
 
+## Context Window Basics
+
+Claude has a 200K token context window, but you don't get all of it. Understanding the real budget prevents agent degradation mid-task.
+
+### The Real Budget
+
+```
+TOTAL: ~176K usable tokens (not 200K)
+
+Fixed overhead:
+- Model/harness overhead:  ~32K
+- CLAUDE.md:                ~2K
+- MCP servers:             0-50K (varies by config!)
+─────────────────────────────
+Available for work:        92-142K
+```
+
+MCP servers are the biggest variable. Each server injects tool definitions into context. If you have 5+ MCP servers enabled, you may be burning 40-50K tokens before the agent reads a single file. Use `CLI > MCP` when possible (see [MCP Optimization](docs/MCP_OPTIMIZATION.md)).
+
+### Warning Thresholds
+
+| Token Usage | Status | Action |
+|-------------|--------|--------|
+| 0-50K | 🟢 Safe | Work normally |
+| 50-100K | 🟡 Monitor | Keep tasks focused |
+| 100-150K | 🟠 Wrap up | Finish current task, don't start new ones |
+| 150K+ | 🔴 Reset | Agent quality degrades — start fresh context |
+
+### Why This Matters for Overnight Runs
+- Each worker gets a fresh context (good)
+- But if a single task is too large, the agent hits 150K+ and starts producing lower quality output
+- Keep tasks to **5-15 minutes of focused work** to stay in the green/yellow zone
+- If an agent's output looks sloppy or repetitive, the task was probably too big
+
+---
+
 ## The 10 Principles
 
 ### 1. One Task = One Context
@@ -139,6 +175,50 @@ Put setup tasks before tasks that depend on them:
 
 ---
 
+## .claudeignore
+
+Add a `.claudeignore` file to your project root. This tells Claude which files to skip when searching your codebase. Without it, agents waste tokens reading files they can't use and may hit "Request too large" errors.
+
+```
+# .claudeignore
+
+# Binary files (Claude can't read these, wastes tokens trying)
+**/*.pdf
+**/*.docx
+**/*.xlsx
+**/*.pptx
+
+# Dependencies (massive, never useful)
+node_modules/
+.next/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Archives (old docs that pollute search results)
+ARCHIVE/
+docs/historical/
+
+# Large generated files
+*.min.js
+*.min.css
+package-lock.json
+yarn.lock
+```
+
+**Why this matters:**
+- PDFs cause "Request too large" errors that kill agent sessions
+- `node_modules/` has thousands of files that slow down searches
+- Old archived docs surface stale information during agent searches
+- Every file Claude reads costs context tokens
+
+**Pro tip:** If your project has PDFs the agent needs, convert them to markdown first and reference the `.md` version.
+
+---
+
 ## Project Structure That Works
 
 Agents work best with organized projects:
@@ -146,6 +226,7 @@ Agents work best with organized projects:
 ```
 your-project/
 ├── CLAUDE.md              # Agent instructions (required)
+├── .claudeignore          # Files to skip (recommended)
 ├── src/
 │   ├── components/        # UI components
 │   ├── routes/            # API routes
@@ -188,6 +269,10 @@ your-project/
 ❌ Agent makes changes, no verification
 ✅ Tests catch issues automatically
 
+### No .claudeignore
+❌ Agent chokes on PDFs, wastes tokens searching node_modules
+✅ Agent only searches relevant source files
+
 ---
 
 ## Quick Checklist
@@ -195,6 +280,7 @@ your-project/
 Before running overnight:
 
 - [ ] CLAUDE.md exists and is < 100 lines
+- [ ] .claudeignore excludes PDFs, node_modules, and archives
 - [ ] Lookup table maps concepts to files
 - [ ] Build/test commands are documented
 - [ ] Tasks are specific with acceptance criteria
