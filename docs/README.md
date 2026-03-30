@@ -11,6 +11,8 @@ Index of all documentation for teneo-agent.
 | [AUDIT_YOUR_PROJECT.md](AUDIT_YOUR_PROJECT.md) | Use Claude to audit and improve your project structure |
 | [DOC_ORGANIZATION.md](DOC_ORGANIZATION.md) | How to organize documentation for AI agents |
 | [MCP_OPTIMIZATION.md](MCP_OPTIMIZATION.md) | Optimize MCP servers to save context tokens |
+| [ENGINEERING_PRINCIPLES.md](ENGINEERING_PRINCIPLES.md) | 6-gate framework for evaluating and hardening AI projects |
+| [WEB_DESIGN_PRINCIPLES.md](WEB_DESIGN_PRINCIPLES.md) | Design framework that makes AI-built sites look custom, not templated |
 
 ## Root Documentation
 
